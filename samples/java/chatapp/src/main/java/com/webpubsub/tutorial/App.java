@@ -55,6 +55,9 @@ public class App {
             if ("azure.webpubsub.sys.connected".equals(event)) {
                 String id = ctx.header("ce-userId");
                 client.sendToAll(String.format("[SYSTEM] %s joined", id), WebPubSubContentType.TEXT_PLAIN);
+            } else if ("azure.webpubsub.sys.disconnected".equals(event)) {
+                String id = ctx.header("ce-userId");
+                client.sendToAll(String.format("[SYSTEM] %s disconnected", id), WebPubSubContentType.TEXT_PLAIN);
             } else if ("azure.webpubsub.user.message".equals(event)) {
                 String id = ctx.header("ce-userId");
                 MessageDTO messageDTO = new Gson().fromJson(ctx.body(), MessageDTO.class);
