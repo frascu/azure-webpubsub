@@ -7,6 +7,7 @@ import com.azure.messaging.webpubsub.models.GetAuthenticationTokenOptions;
 import com.azure.messaging.webpubsub.models.WebPubSubAuthenticationToken;
 import com.azure.messaging.webpubsub.models.WebPubSubContentType;
 
+import com.google.gson.Gson;
 import io.javalin.Javalin;
 
 public class App {
@@ -41,7 +42,6 @@ public class App {
             option.setUserId(id);
             WebPubSubAuthenticationToken token = client.getAuthenticationToken(option);
             ctx.result(token.getUrl());
-            return;
         });
         
         // validation: https://azure.github.io/azure-webpubsub/references/protocol-cloudevents#validation
@@ -57,8 +57,17 @@ public class App {
                 client.sendToAll(String.format("[SYSTEM] %s joined", id), WebPubSubContentType.TEXT_PLAIN);
             } else if ("azure.webpubsub.user.message".equals(event)) {
                 String id = ctx.header("ce-userId");
-                String message = ctx.body();
-                client.sendToAll(String.format("[%s] %s", id, message), WebPubSubContentType.TEXT_PLAIN);
+                MessageDTO messageDTO = new Gson().fromJson(ctx.body(), MessageDTO.class);
+
+                if (messageDTO.getToUser() == null || messageDTO.getToUser().isEmpty()) {
+                    client.sendToAll(String.format("[%s -> all] %s", id, messageDTO.getMessage()), WebPubSubContentType.TEXT_PLAIN);
+                } else {
+                    // send sender user
+                    client.sendToUser(id, String.format("[%s -> %s] %s", id, messageDTO.getToUser(), messageDTO.getMessage()), WebPubSubContentType.TEXT_PLAIN);
+
+                    // send recipient user
+                    client.sendToUser(messageDTO.getToUser(), String.format("[%s -> you] %s", id, messageDTO.getMessage()), WebPubSubContentType.TEXT_PLAIN);
+                }
             }
             ctx.status(200);
         });

@@ -3,11 +3,16 @@
 
       <body>
         <h1>Azure Web PubSub Chat</h1>
+        <p id="iam"></p>
         <input id="message" placeholder="Type to chat...">
+        <input id="username" placeholder="Type recipient's username...">
         <div id="messages"></div>
         <script>
           (async function () {
             let id = prompt('Please input your user name');
+            let iam = document.querySelector('#iam');
+            iam.innerHTML = 'Username: ' + id;
+
             let res = await fetch(`/negotiate?id=${id}`);
             let url = await res.text();
             let ws = new WebSocket(url);
@@ -21,9 +26,10 @@
             };
   
             let message = document.querySelector('#message');
+            let username = document.querySelector('#username');
             message.addEventListener('keypress', e => {
               if (e.charCode !== 13) return;
-              ws.send(message.value);
+              ws.send(JSON.stringify({'message': message.value, 'toUser': username.value}));
               message.value = '';
             });
           })();
