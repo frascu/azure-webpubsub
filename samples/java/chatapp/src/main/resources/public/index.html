@@ -9,7 +9,11 @@
         <div id="messages"></div>
         <script>
           (async function () {
-            let id = prompt('Please input your user name');
+            let id = null;
+            while (id == null) {
+              id = prompt('Please input your user name');
+            }
+
             let iam = document.querySelector('#iam');
             iam.innerHTML = 'Username: ' + id;
 
